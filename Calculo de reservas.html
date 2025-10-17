@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Reservas Minerales</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1em;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            margin-right: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .result-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-value {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .add-row-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            margin-top: 10px;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #f44336 0%, #e53935 100%);
+            padding: 5px 15px;
+            font-size: 0.9em;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .info-box strong {
+            color: #1976D2;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .summary-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .summary-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Sistema de Cálculo de Reservas Minerales</h1>
+            <p>Estimación de recursos y reservas según Código CM-2015</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-step="1">1. Modelo Geológico</button>
+            <button class="tab" data-step="2">2. Cálculo de Volumen</button>
+            <button class="tab" data-step="3">3. Tonelaje</button>
+            <button class="tab" data-step="4">4. Leyes Promedio</button>
+            <button class="tab" data-step="5">5. Factores Modificantes</button>
+        </div>
+
+        <div class="content">
+            <div id="step1" class="step active">
+                <h2>Paso 1: Construcción del Modelo Geológico</h2>
+                <div class="info-box">
+                    <strong>Información:</strong> Ingrese los datos de perforación, estructura del yacimiento y tipo de depósito mineral.
+                </div>
+
+                <div class="grid">
+                    <div class="form-group">
+                        <label>Tipo de Yacimiento</label>
+                        <select id="tipoYacimiento">
+                            <option value="veta">Veta/Filón</option>
+                            <option value="manto">Manto</option>
+                            <option value="cuerpo">Cuerpo Mineralizado</option>
+                            <option value="diseminado">Diseminado</option>
+                            <option value="porfido">Pórfido</option>
+                            <option value="stockwork">Stock Work</option>
+                            <option value="skarn">Skarn</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Método de Cálculo</label>
+                        <select id="metodoCalculo">
+                            <option value="bloques">Método de Bloques</option>
+                            <option value="secciones">Método de Secciones</option>
+                            <option value="poligonos">Método de Polígonos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mineral Principal</label>
+                        <input type="text" id="mineralPrincipal" placeholder="Ej: Cobre, Oro, Plata" value="Cobre">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Número de Sondajes</label>
+                        <input type="number" id="numSondajes" value="10">
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <div></div>
+                    <button data-next="2">Siguiente →</button>
+                </div>
+            </div>
+
+            <div id="step2" class="step">
+                <h2>Paso 2: Estimación de Volumen del Cuerpo Mineral</h2>
+                <div class="info-box">
+                    <strong>Información:</strong> Ingrese las dimensiones y áreas de influencia para calcular el volumen total.
+                </div>
+
+                <div id="metodoBloquesDiv">
+                    <h3>Datos por Bloque</h3>
+                    <table id="tablaBloques">
+                        <thead>
+                            <tr>
+                                <th>Bloque</th>
+                                <th>Longitud (m)</th>
+                                <th>Ancho (m)</th>
+                                <th>Potencia (m)</th>
+                                <th>Volumen (m³)</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bloquesTbody">
+                            <tr>
+                                <td>1</td>
+                                <td><input type="number" class="long" value="50"></td>
+                                <td><input type="number" class="ancho" value="50"></td>
+                                <td><input type="number" class="pot" value="3.5" step="0.1"></td>
+                                <td class="volumen">8750</td>
+                                <td><button class="delete-btn" data-action="delete">Eliminar</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="add-row-btn" id="btnAgregarBloque">+ Agregar Bloque</button>
+
+                    <div class="result-card">
+                        <h3>Volumen Total Estimado</h3>
+                        <div class="result-item">
+                            <span>Volumen Total:</span>
+                            <span class="result-value" id="volumenTotal">8,750 m³</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn-secondary" data-prev="1">← Anterior</button>
+                    <button data-next="3">Siguiente →</button>
+                </div>
+            </div>
+
+            <div id="step3" class="step">
+                <h2>Paso 3: Cálculo de Tonelaje</h2>
+                <div class="info-box">
+                    <strong>Información:</strong> Ingrese la densidad del mineral para calcular el tonelaje total.
+                </div>
+
+                <div class="grid">
+                    <div class="form-group">
+                        <label>Densidad del Mineral (t/m³)</label>
+                        <input type="number" id="densidad" value="2.7" step="0.1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Factor de Tonelaje (pies³/TC) - Opcional</label>
+                        <input type="number" id="factorTonelaje" value="9.5" step="0.1">
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>Tonelaje Calculado</h3>
+                    <div class="result-item">
+                        <span>Volumen Total:</span>
+                        <span class="result-value" id="volumenTotalTon">8,750 m³</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Densidad:</span>
+                        <span class="result-value" id="densidadMostrar">2.7 t/m³</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Tonelaje Total:</span>
+                        <span class="result-value" id="tonelajeTotal">23,625 TC</span>
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn-secondary" data-prev="2">← Anterior</button>
+                    <button data-next="4">Siguiente →</button>
+                </div>
+            </div>
+
+            <div id="step4" class="step">
+                <h2>Paso 4: Determinación de Leyes Promedio</h2>
+                <div class="info-box">
+                    <strong>Información:</strong> Ingrese las leyes de cada bloque para calcular la ley promedio ponderada.
+                </div>
+
+                <h3>Leyes por Bloque</h3>
+                <table id="tablaLeyes">
+                    <thead>
+                        <tr>
+                            <th>Bloque</th>
+                            <th>Volumen (m³)</th>
+                            <th>Tonelaje (TC)</th>
+                            <th>Ley (%)</th>
+                            <th>Ton × Ley</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leyesTbody">
+                    </tbody>
+                </table>
+
+                <div class="result-card">
+                    <h3>Ley Promedio Ponderada</h3>
+                    <div class="result-item">
+                        <span>Tonelaje Total:</span>
+                        <span class="result-value" id="tonelajeTotalLeyes">0 TC</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Ley Promedio:</span>
+                        <span class="result-value" id="leyPromedio">0.00 %</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Contenido Metálico:</span>
+                        <span class="result-value" id="contenidoMetalico">0 TC</span>
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn-secondary" data-prev="3">← Anterior</button>
+                    <button data-next="5">Siguiente →</button>
+                </div>
+            </div>
+
+            <div id="step5" class="step">
+                <h2>Paso 5: Aplicación de Factores Modificantes</h2>
+                <div class="info-box">
+                    <strong>Información:</strong> Aplique factores para convertir recursos minerales en reservas económicamente viables.
+                </div>
+
+                <h3>Factores Mineros</h3>
+                <div class="grid">
+                    <div class="form-group">
+                        <label>Método de Explotación</label>
+                        <select id="metodoExplotacion">
+                            <option value="subterraneo">Subterráneo</option>
+                            <option value="rajo">Rajo Abierto</option>
+                            <option value="mixto">Mixto</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Recuperación Minera (%)</label>
+                        <input type="number" id="recuperacionMinera" value="85" min="0" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Dilución (%)</label>
+                        <input type="number" id="dilucion" value="15" min="0" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ley de Corte (%)</label>
+                        <input type="number" id="leyCorte" value="0.5" step="0.1">
+                    </div>
+                </div>
+
+                <h3>Factores Metalúrgicos</h3>
+                <div class="grid">
+                    <div class="form-group">
+                        <label>Recuperación Metalúrgica (%)</label>
+                        <input type="number" id="recuperacionMetalurgica" value="90" min="0" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio del Mineral (USD/ton)</label>
+                        <input type="number" id="precioMineral" value="3500" step="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Costo Operativo (USD/ton)</label>
+                        <input type="number" id="costoOperativo" value="50" step="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Categoría de Recurso</label>
+                        <select id="categoriaRecurso">
+                            <option value="medido">Medido</option>
+                            <option value="indicado">Indicado</option>
+                            <option value="inferido">Inferido</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="btnCalcularReservas" style="width: 100%; margin-top: 20px; padding: 15px; font-size: 1.2em;">
+                    🔍 Calcular Reservas Finales
+                </button>
+
+                <div class="result-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <h3>📈 RESULTADOS FINALES - RESERVAS MINERALES</h3>
+                   
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <h4>Tonelaje Bruto</h4>
+                            <div class="value" id="tonelajeBruto">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Tonelaje Recuperable</h4>
+                            <div class="value" id="tonelajeRecuperable">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Ley Diluida</h4>
+                            <div class="value" id="leyDiluida">0.00%</div>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Contenido Metálico Final</h4>
+                            <div class="value" id="contenidoFinal">0</div>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Categoría de Reserva:</span>
+                        <span class="result-value" id="categoriaReserva">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Valor Económico Estimado:</span>
+                        <span class="result-value" id="valorEconomico">USD $0</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Beneficio Neto Estimado:</span>
+                        <span class="result-value" id="beneficioNeto">USD $0</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Viabilidad Económica:</span>
+                        <span class="result-value" id="viabilidad">-</span>
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn-secondary" data-prev="4">← Anterior</button>
+                    <button id="btnGenerarReporte">📄 Generar Reporte</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var bloqueCounter = 1;
+        var datosGlobales = {
+            volumenes: [],
+            tonelajes: [],
+            leyes: [],
+            volumenTotal: 0,
+            tonelajeTotal: 0,
+            leyPromedio: 0,
+            contenidoMetalico: 0,
+            reservas: null
+        };
+
+        function showStep(step) {
+            var steps = document.querySelectorAll('.step');
+            var tabs = document.querySelectorAll('.tab');
+           
+            for (var i = 0; i < steps.length; i++) {
+                steps[i].classList.remove('active');
+            }
+           
+            for (var j = 0; j < tabs.length; j++) {
+                tabs[j].classList.remove('active');
+            }
+           
+            document.getElementById('step' + step).classList.add('active');
+            tabs[step - 1].classList.add('active');
+
+            if (step === 3) {
+                calcularTonelaje();
+            } else if (step === 4) {
+                actualizarTablaLeyes();
+            } else if (step === 5) {
+                calcularReservas();
+            }
+        }
+
+        function calcularVolumenFila(input) {
+            var row = input.closest('tr');
+            var long = parseFloat(row.querySelector('.long').value) || 0;
+            var ancho = parseFloat(row.querySelector('.ancho').value) || 0;
+            var pot = parseFloat(row.querySelector('.pot').value) || 0;
+            var volumen = long * ancho * pot;
+           
+            row.querySelector('.volumen').textContent = volumen.toFixed(2);
+           
+            calcularVolumenTotal();
+        }
+
+        function calcularVolumenTotal() {
+            var total = 0;
+            var volumenes = document.querySelectorAll('#bloquesTbody .volumen');
+           
+            for (var i = 0; i < volumenes.length; i++) {
+                total += parseFloat(volumenes[i].textContent) || 0;
+            }
+           
+            document.getElementById('volumenTotal').textContent = total.toLocaleString('es-ES', {maximumFractionDigits: 2}) + ' m³';
+            datosGlobales.volumenTotal = total;
+        }
+
+        function agregarBloque() {
+            bloqueCounter++;
+            var tbody = document.getElementById('bloquesTbody');
+            var newRow = document.createElement('tr');
+            newRow.innerHTML = '<td>' + bloqueCounter + '</td>' +
+                '<td><input type="number" class="long" value="50"></td>' +
+                '<td><input type="number" class="ancho" value="50"></td>' +
+                '<td><input type="number" class="pot" value="3" step="0.1"></td>' +
+                '<td class="volumen">7500</td>' +
+                '<td><button class="delete-btn" data-action="delete">Eliminar</button></td>';
+            tbody.appendChild(newRow);
+            calcularVolumenTotal();
+        }
+
+        function eliminarFila(btn) {
+            var rowCount = document.querySelectorAll('#bloquesTbody tr').length;
+            if (rowCount > 1) {
+                btn.closest('tr').remove();
+                calcularVolumenTotal();
+            } else {
+                alert('Debe mantener al menos un bloque');
+            }
+        }
+
+        function calcularTonelaje() {
+            var volumenTotal = datosGlobales.volumenTotal || 0;
+            var densidad = parseFloat(document.getElementById('densidad').value) || 2.7;
+            var tonelaje = volumenTotal * densidad;
+           
+            document.getElementById('volumenTotalTon').textContent = volumenTotal.toLocaleString('es-ES', {maximumFractionDigits: 2}) + ' m³';
+            document.getElementById('densidadMostrar').textContent = densidad.toFixed(2) + ' t/m³';
+            document.getElementById('tonelajeTotal').textContent = tonelaje.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' TC';
+           
+            datosGlobales.tonelajeTotal = tonelaje;
+        }
+
+        function actualizarTablaLeyes() {
+            var tbody = document.getElementById('leyesTbody');
+            tbody.innerHTML = '';
+           
+            var densidad = parseFloat(document.getElementById('densidad').value) || 2.7;
+            var rows = document.querySelectorAll('#bloquesTbody tr');
+           
+            for (var i = 0; i < rows.length; i++) {
+                var volumen = parseFloat(rows[i].querySelector('.volumen').textContent) || 0;
+                var tonelaje = volumen * densidad;
+                var leyAleatoria = (Math.random() * 2 + 0.5).toFixed(2);
+               
+                var newRow = document.createElement('tr');
+                newRow.innerHTML = '<td>' + (i + 1) + '</td>' +
+                    '<td>' + volumen.toFixed(2) + '</td>' +
+                    '<td>' + tonelaje.toFixed(2) + '</td>' +
+                    '<td><input type="number" class="ley-input" value="' + leyAleatoria + '" step="0.01"></td>' +
+                    '<td class="ton-ley">0</td>';
+                tbody.appendChild(newRow);
+            }
+           
+            calcularLeyPromedio();
+        }
+
+        function calcularLeyPromedio() {
+            var totalTonelaje = 0;
+            var totalTonLey = 0;
+           
+            var rows = document.querySelectorAll('#leyesTbody tr');
+            for (var i = 0; i < rows.length; i++) {
+                var tonelaje = parseFloat(rows[i].cells[2].textContent) || 0;
+                var leyInput = rows[i].querySelector('.ley-input');
+                var ley = leyInput ? parseFloat(leyInput.value) || 0 : 0;
+                var tonLey = tonelaje * ley;
+               
+                var tonLeyCell = rows[i].querySelector('.ton-ley');
+                if (tonLeyCell) {
+                    tonLeyCell.textContent = tonLey.toFixed(2);
+                }
+                totalTonelaje += tonelaje;
+                totalTonLey += tonLey;
+            }
+           
+            var leyPromedio = totalTonelaje > 0 ? totalTonLey / totalTonelaje : 0;
+            var contenidoMetalico = totalTonelaje * (leyPromedio / 100);
+           
+            document.getElementById('tonelajeTotalLeyes').textContent = totalTonelaje.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' TC';
+            document.getElementById('leyPromedio').textContent = leyPromedio.toFixed(2) + ' %';
+            document.getElementById('contenidoMetalico').textContent = contenidoMetalico.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' TC';
+           
+            datosGlobales.leyPromedio = leyPromedio;
+            datosGlobales.contenidoMetalico = contenidoMetalico;
+        }
+
+        function calcularReservas() {
+            var tonelajeTotal = datosGlobales.tonelajeTotal || 0;
+            var leyPromedio = datosGlobales.leyPromedio || 0;
+            var recuperacionMinera = parseFloat(document.getElementById('recuperacionMinera').value) / 100;
+            var dilucion = parseFloat(document.getElementById('dilucion').value) / 100;
+            var recuperacionMetalurgica = parseFloat(document.getElementById('recuperacionMetalurgica').value) / 100;
+            var precioMineral = parseFloat(document.getElementById('precioMineral').value);
+            var costoOperativo = parseFloat(document.getElementById('costoOperativo').value);
+            var categoriaRecurso = document.getElementById('categoriaRecurso').value;
+           
+            var tonelajeRecuperable = tonelajeTotal * recuperacionMinera;
+            var tonelajeDiluido = tonelajeRecuperable * (1 + dilucion);
+            var leyDiluida = (leyPromedio * tonelajeRecuperable) / tonelajeDiluido;
+            var contenidoMetalico = tonelajeDiluido * (leyDiluida / 100) * recuperacionMetalurgica;
+           
+            var valorBruto = contenidoMetalico * precioMineral;
+            var costoTotal = tonelajeDiluido * costoOperativo;
+            var beneficioNeto = valorBruto - costoTotal;
+            var viabilidad = beneficioNeto > 0 ? '✅ VIABLE' : '❌ NO VIABLE';
+           
+            var categoriaReserva = '';
+            if (categoriaRecurso === 'medido') {
+                categoriaReserva = 'Reserva Probada';
+            } else if (categoriaRecurso === 'indicado') {
+                categoriaReserva = 'Reserva Probable';
+            } else {
+                categoriaReserva = 'Recurso Inferido (No clasificable como reserva)';
+            }
+           
+            document.getElementById('tonelajeBruto').textContent = tonelajeTotal.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' TC';
+            document.getElementById('tonelajeRecuperable').textContent = tonelajeDiluido.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' TC';
+            document.getElementById('leyDiluida').textContent = leyDiluida.toFixed(2) + '%';
+            document.getElementById('contenidoFinal').textContent = contenidoMetalico.toLocaleString('es-ES', {maximumFractionDigits: 0}) + ' TC';
+            document.getElementById('categoriaReserva').textContent = categoriaReserva;
+            // --- CORRECCIÓN AQUÍ ---
+            document.getElementById('valorEconomico').textContent = 'USD $' + valorBruto.toLocaleString('es-ES', {maximumFractionDigits: 0});
+            document.getElementById('beneficioNeto').textContent = 'USD $' + beneficioNeto.toLocaleString('es-ES', {maximumFractionDigits: 0});
+            // --- FIN DE LA CORRECCIÓN ---
+            document.getElementById('viabilidad').textContent = viabilidad;
+           
+            datosGlobales.reservas = {
+                tonelajeBruto: tonelajeTotal,
+                tonelajeRecuperable: tonelajeDiluido,
+                leyDiluida: leyDiluida,
+                contenidoMetalico: contenidoMetalico,
+                categoriaReserva: categoriaReserva,
+                valorEconomico: valorBruto,
+                beneficioNeto: beneficioNeto,
+                viabilidad: viabilidad
+            };
+        }
+
+        function generarReporte() {
+            var tipoYacimiento = document.getElementById('tipoYacimiento').value;
+            var metodoCalculo = document.getElementById('metodoCalculo').value;
+            var mineralPrincipal = document.getElementById('mineralPrincipal').value;
+            var metodoExplotacion = document.getElementById('metodoExplotacion').value;
+            var fechaActual = new Date();
+            var fechaFormateada = fechaActual.getDate() + '/' + (fechaActual.getMonth() + 1) + '/' + fechaActual.getFullYear();
+           
+            var reporte = '═══════════════════════════════════════════════════════════════\n';
+            reporte += '                    REPORTE TÉCNICO DE RESERVAS MINERALES\n';
+            reporte += '═══════════════════════════════════════════════════════════════\n\n';
+            reporte += 'INFORMACIÓN GENERAL DEL PROYECTO\n';
+            reporte += '---------------------------------\n';
+            reporte += 'Tipo de Yacimiento: ' + tipoYacimiento.toUpperCase() + '\n';
+            reporte += 'Método de Cálculo: ' + metodoCalculo + '\n';
+            reporte += 'Mineral Principal: ' + mineralPrincipal + '\n';
+            reporte += 'Método de Explotación: ' + metodoExplotacion + '\n';
+            reporte += 'Fecha de Evaluación: ' + fechaFormateada + '\n\n';
+           
+            reporte += 'MODELO GEOLÓGICO\n';
+            reporte += '---------------------------------\n';
+            reporte += 'Número de Bloques Evaluados: ' + document.querySelectorAll('#bloquesTbody tr').length + '\n';
+            reporte += 'Volumen Total Estimado: ' + (datosGlobales.volumenTotal ? datosGlobales.volumenTotal.toLocaleString('es-ES', {maximumFractionDigits: 2}) : '0') + ' m³\n\n';
+           
+            reporte += 'ESTIMACIÓN DE TONELAJE\n';
+            reporte += '---------------------------------\n';
+            reporte += 'Densidad del Mineral: ' + document.getElementById('densidad').value + ' t/m³\n';
+            reporte += 'Tonelaje Bruto: ' + (datosGlobales.tonelajeTotal ? datosGlobales.tonelajeTotal.toLocaleString('es-ES', {maximumFractionDigits: 0}) : '0') + ' TC\n\n';
+           
+            reporte += 'LEYES MINERALES\n';
+            reporte += '---------------------------------\n';
+            reporte += 'Ley Promedio Ponderada: ' + (datosGlobales.leyPromedio ? datosGlobales.leyPromedio.toFixed(2) : '0') + ' %\n';
+            reporte += 'Contenido Metálico Original: ' + (datosGlobales.contenidoMetalico ? datosGlobales.contenidoMetalico.toLocaleString('es-ES', {maximumFractionDigits: 0}) : '0') + ' TC\n\n';
+           
+            reporte += 'FACTORES MODIFICANTES APLICADOS\n';
+            reporte += '---------------------------------\n';
+            reporte += '• Recuperación Minera: ' + document.getElementById('recuperacionMinera').value + '%\n';
+            reporte += '• Dilución: ' + document.getElementById('dilucion').value + '%\n';
+            reporte += '• Recuperación Metalúrgica: ' + document.getElementById('recuperacionMetalurgica').value + '%\n';
+            reporte += '• Ley de Corte: ' + document.getElementById('leyCorte').value + '%\n\n';
+           
+            reporte += 'RESULTADOS FINALES - RESERVAS\n';
+            reporte += '═══════════════════════════════════════════════════════════════\n';
+            reporte += 'Tonelaje Recuperable: ' + (datosGlobales.reservas ? datosGlobales.reservas.tonelajeRecuperable.toLocaleString('es-ES', {maximumFractionDigits: 0}) : '0') + ' TC\n';
+            reporte += 'Ley Diluida: ' + (datosGlobales.reservas ? datosGlobales.reservas.leyDiluida.toFixed(2) : '0') + '%\n';
+            reporte += 'Contenido Metálico Final: ' + (datosGlobales.reservas ? datosGlobales.reservas.contenidoMetalico.toLocaleString('es-ES', {maximumFractionDigits: 0}) : '0') + ' TC\n';
+            reporte += 'Categoría: ' + (datosGlobales.reservas ? datosGlobales.reservas.categoriaReserva : 'N/A') + '\n\n';
+           
+            reporte += 'ANÁLISIS ECONÓMICO\n';
+            reporte += '---------------------------------\n';
+            // --- CORRECCIÓN AQUÍ ---
+            reporte += 'Precio del Mineral: USD $' + document.getElementById('precioMineral').value + '/ton\n';
+            reporte += 'Costo Operativo: USD $' + document.getElementById('costoOperativo').value + '/ton\n';
+            reporte += 'Valor Económico Bruto: USD $' + (datosGlobales.reservas ? datosGlobales.reservas.valorEconomico.toLocaleString('es-ES', {maximumFractionDigits: 0}) : '0') + '\n';
+            reporte += 'Beneficio Neto Estimado: USD $' + (datosGlobales.reservas ? datosGlobales.reservas.beneficioNeto.toLocaleString('es-ES', {maximumFractionDigits: 0}) : '0') + '\n';
+            // --- FIN DE LA CORRECCIÓN ---
+            reporte += 'Viabilidad Económica: ' + (datosGlobales.reservas ? datosGlobales.reservas.viabilidad : 'N/A') + '\n\n';
+           
+            reporte += '═══════════════════════════════════════════════════════════════\n';
+            reporte += 'CUMPLIMIENTO NORMATIVO: Código CM-2015\n';
+            reporte += '═══════════════════════════════════════════════════════════════\n\n';
+           
+            reporte += 'NOTA: Este reporte es una estimación técnica preliminar. Para\n';
+            reporte += 'declaración oficial de reservas se requiere validación por\n';
+            reporte += 'Persona Competente Calificada (PCC) y estudios de factibilidad\n';
+            reporte += 'completos que consideren todos los factores modificantes.\n\n';
+           
+            reporte += '═══════════════════════════════════════════════════════════════\n';
+           
+            var blob = new Blob([reporte], { type: 'text/plain' });
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            var nombreArchivo = 'Reporte_Reservas_' + mineralPrincipal + '_' + fechaActual.toISOString().split('T')[0] + '.txt';
+            a.download = nombreArchivo;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+           
+            alert('✅ Reporte generado y descargado exitosamente');
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            calcularVolumenTotal();
+           
+            // Navegación entre pasos
+            var tabButtons = document.querySelectorAll('.tab');
+            for (var i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].addEventListener('click', function() {
+                    var step = parseInt(this.getAttribute('data-step'));
+                    showStep(step);
+                });
+            }
+           
+            // Botones de navegación
+            var nextButtons = document.querySelectorAll('button[data-next]');
+            for (var i = 0; i < nextButtons.length; i++) {
+                nextButtons[i].addEventListener('click', function() {
+                    var nextStep = parseInt(this.getAttribute('data-next'));
+                    showStep(nextStep);
+                });
+            }
+           
+            var prevButtons = document.querySelectorAll('button[data-prev]');
+            for (var i = 0; i < prevButtons.length; i++) {
+                prevButtons[i].addEventListener('click', function() {
+                    var prevStep = parseInt(this.getAttribute('data-prev'));
+                    showStep(prevStep);
+                });
+            }
+           
+            // Agregar bloque
+            var btnAgregar = document.getElementById('btnAgregarBloque');
+            if (btnAgregar) {
+                btnAgregar.addEventListener('click', agregarBloque);
+            }
+           
+            // Calcular reservas
+            var btnCalcular = document.getElementById('btnCalcularReservas');
+            if (btnCalcular) {
+                btnCalcular.addEventListener('click', calcularReservas);
+            }
+           
+            // Generar reporte
+            var btnReporte = document.getElementById('btnGenerarReporte');
+            if (btnReporte) {
+                btnReporte.addEventListener('click', generarReporte);
+            }
+           
+            // Cambios en densidad
+            var densidadInput = document.getElementById('densidad');
+            if (densidadInput) {
+                densidadInput.addEventListener('change', calcularTonelaje);
+            }
+           
+            // Delegación de eventos para inputs dinámicos
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('long') || 
+                    e.target.classList.contains('ancho') || 
+                    e.target.classList.contains('pot')) {
+                    calcularVolumenFila(e.target);
+                }
+               
+                if (e.target.classList.contains('ley-input')) {
+                    calcularLeyPromedio();
+                }
+            });
+           
+            // Delegación de eventos para botones de eliminar
+            document.addEventListener('click', function(e) {
+                if (e.target.getAttribute('data-action') === 'delete') {
+                    eliminarFila(e.target);
+                }
+            });
+           
+            // Cambios en factores modificantes
+            var factoresInputs = ['recuperacionMinera', 'dilucion', 'recuperacionMetalurgica', 
+                                  'precioMineral', 'costoOperativo', 'categoriaRecurso'];
+           
+            for (var i = 0; i < factoresInputs.length; i++) {
+                var input = document.getElementById(factoresInputs[i]);
+                if (input) {
+                    input.addEventListener('change', function() {
+                        if (document.getElementById('step5').classList.contains('active')) {
+                            calcularReservas();
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
